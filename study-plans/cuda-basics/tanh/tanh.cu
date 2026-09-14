@@ -1,0 +1,18 @@
+#include <cuda_runtime.h>
+#include <math.h>
+
+__global__ void tanh_kernel(const float* input, float* output, int N) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if(idx < N) {
+        float negEXP = exp(-input[idx]);
+        float posEXP = exp(input[idx]);
+        output[idx] = (posEXP - negEXP) / (posEXP + negEXP);
+    }
+}
+
+extern "C" void solve(const float* input, float* output, int N) {
+    int threads = 256;
+    int blocks = (N + threads - 1) / threads;
+    tanh_kernel<<<blocks, threads>>>(input, output, N);
+    cudaDeviceSynchronize();
+}
